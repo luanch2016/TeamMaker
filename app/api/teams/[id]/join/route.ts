@@ -1,6 +1,6 @@
 
 import { NextResponse } from 'next/server';
-import { readTeams, writeTeams, Team } from '@/lib/data';
+import { getTeamById, updateTeamMembers } from '@/lib/data';
 
 export async function POST(
     request: Request,
@@ -18,14 +18,11 @@ export async function POST(
             );
         }
 
-        const teams = await readTeams();
-        const teamIndex = teams.findIndex((t) => t.id === id);
+        const team = await getTeamById(id);
 
-        if (teamIndex === -1) {
+        if (!team) {
             return NextResponse.json({ error: 'Team not found' }, { status: 404 });
         }
-
-        const team = teams[teamIndex];
 
         if (team.members.length >= 5) {
             return NextResponse.json({ error: 'Team is full' }, { status: 400 });
@@ -33,14 +30,14 @@ export async function POST(
 
         team.members.push({ name, email });
 
+        let status: 'OPEN' | 'FULL' = team.status;
         if (team.members.length >= 5) {
-            team.status = 'FULL';
+            status = 'FULL';
         }
 
-        teams[teamIndex] = team;
-        await writeTeams(teams);
+        const updatedTeam = await updateTeamMembers(id, team.members, status);
 
-        return NextResponse.json(team);
+        return NextResponse.json(updatedTeam);
     } catch (error) {
         console.error('Error joining team:', error);
         return NextResponse.json(

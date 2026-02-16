@@ -1,6 +1,6 @@
 
 import { NextResponse } from 'next/server';
-import { readTeams, writeTeams } from '@/lib/data';
+import { deleteTeam } from '@/lib/data';
 
 export async function DELETE(
     request: Request,
@@ -8,14 +8,12 @@ export async function DELETE(
 ) {
     try {
         const { id } = await params;
-        const teams = await readTeams();
-        const filteredTeams = teams.filter((t) => t.id !== id);
+        const deleted = await deleteTeam(id);
 
-        if (teams.length === filteredTeams.length) {
+        if (!deleted) {
             return NextResponse.json({ error: 'Team not found' }, { status: 404 });
         }
 
-        await writeTeams(filteredTeams);
         return NextResponse.json({ message: 'Team deleted' });
     } catch (error) {
         console.error('Error deleting team:', error);

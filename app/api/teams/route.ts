@@ -1,11 +1,18 @@
 
 import { NextResponse } from 'next/server';
-import { readTeams, writeTeams, Team, Member } from '@/lib/data';
-import { v4 as uuidv4 } from 'uuid';
+import { getTeams, createTeam } from '@/lib/data';
 
 export async function GET() {
-    const teams = await readTeams();
-    return NextResponse.json(teams);
+    try {
+        const teams = await getTeams();
+        return NextResponse.json(teams);
+    } catch (error) {
+        console.error('Error fetching teams:', error);
+        return NextResponse.json(
+            { error: 'Internal Server Error' },
+            { status: 500 }
+        );
+    }
 }
 
 export async function POST(request: Request) {
@@ -20,17 +27,7 @@ export async function POST(request: Request) {
             );
         }
 
-        const newTeam: Team = {
-            id: uuidv4(),
-            subjectId,
-            leader: { name: leaderName, email: leaderEmail },
-            members: [{ name: leaderName, email: leaderEmail }],
-            status: 'OPEN',
-        };
-
-        const teams = await readTeams();
-        teams.push(newTeam);
-        await writeTeams(teams);
+        const newTeam = await createTeam(subjectId, leaderName, leaderEmail);
 
         return NextResponse.json(newTeam, { status: 201 });
     } catch (error) {
