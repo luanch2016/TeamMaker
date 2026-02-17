@@ -18,16 +18,16 @@ export async function GET() {
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { subjectId, leaderName, leaderEmail } = body;
+        const { name, subjectId, leaderName, leaderEmail } = body;
 
-        if (!subjectId || !leaderName || !leaderEmail) {
+        if (!name || !subjectId || !leaderName || !leaderEmail) {
             return NextResponse.json(
                 { error: 'Missing required fields' },
                 { status: 400 }
             );
         }
 
-        const newTeam = await createTeam(subjectId, leaderName, leaderEmail);
+        const newTeam = await createTeam(name, subjectId, leaderName, leaderEmail);
 
         return NextResponse.json(newTeam, { status: 201 });
     } catch (error) {
