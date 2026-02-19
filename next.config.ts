@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // @ts-expect-error - User requested false to disable all indicators, potentially creating a type mismatch
+  devIndicators: false,
   reactStrictMode: false,
 };
 
