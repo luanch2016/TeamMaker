@@ -9,6 +9,11 @@ import TeamCard from './components/TeamCard';
 export default function Home() {
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredTeams = teams.filter(team =>
+    team.subjectId.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const fetchTeams = async () => {
     try {
@@ -50,25 +55,34 @@ export default function Home() {
 
           {/* Right Column: Team List */}
           <div className="lg:col-span-2">
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
               <h2 className="text-2xl font-bold text-gray-900">Available Teams</h2>
-              <span className="bg-indigo-100 text-indigo-800 text-xs font-semibold px-2.5 py-0.5 rounded">
-                {teams.length} Teams
-              </span>
+              <div className="flex items-center gap-4 w-full sm:w-auto">
+                <input
+                  type="text"
+                  placeholder="Filter by Subject ID..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full sm:w-64 rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2"
+                />
+                <span className="bg-indigo-100 text-indigo-800 text-xs font-semibold px-2.5 py-0.5 rounded whitespace-nowrap">
+                  {filteredTeams.length} Teams
+                </span>
+              </div>
             </div>
 
             {loading ? (
               <div className="flex justify-center p-12">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
               </div>
-            ) : teams.length === 0 ? (
+            ) : filteredTeams.length === 0 ? (
               <div className="text-center py-12 bg-white rounded-xl border border-dashed border-gray-300">
-                <p className="text-gray-500 text-lg">No teams created yet.</p>
-                <p className="text-gray-400 text-sm">Be the first to start a team!</p>
+                <p className="text-gray-500 text-lg">No teams found.</p>
+                {searchQuery && <p className="text-gray-400 text-sm">Try adjusting your search query.</p>}
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {teams.map((team) => (
+                {filteredTeams.map((team) => (
                   <TeamCard key={team.id} team={team} onUpdate={fetchTeams} />
                 ))}
               </div>

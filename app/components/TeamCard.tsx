@@ -6,6 +6,7 @@ import { Team } from '@/lib/data';
 import JoinTeamModal from './JoinTeamModal';
 import EditTeamModal from './EditTeamModal';
 import ScheduleMeetingModal from './ScheduleMeetingModal';
+import ViewEmailsModal from './ViewEmailsModal';
 
 interface TeamCardProps {
     team: Team;
@@ -16,6 +17,7 @@ export default function TeamCard({ team, onUpdate }: TeamCardProps) {
     const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+    const [isViewEmailsModalOpen, setIsViewEmailsModalOpen] = useState(false);
     const [editingMemberEmail, setEditingMemberEmail] = useState<string | null>(null);
     const [editingTimezone, setEditingTimezone] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -101,9 +103,17 @@ export default function TeamCard({ team, onUpdate }: TeamCardProps) {
                 </div>
 
                 <div className="mb-6">
-                    <h4 className="text-sm font-medium text-gray-700 mb-2">
-                        Members ({team.members.length}/5)
-                    </h4>
+                    <div className="flex justify-between items-center mb-2">
+                        <h4 className="text-sm font-medium text-gray-700">
+                            Members ({team.members.length}/5)
+                        </h4>
+                        <button
+                            onClick={() => setIsViewEmailsModalOpen(true)}
+                            className="text-xs text-indigo-600 hover:text-indigo-800 hover:underline"
+                        >
+                            View Emails
+                        </button>
+                    </div>
                     <ul className="space-y-2">
                         {team.members.map((member, idx) => (
                             <li key={idx} className="text-sm text-gray-600 flex items-center justify-between bg-gray-50 p-2 rounded-md">
@@ -245,6 +255,12 @@ export default function TeamCard({ team, onUpdate }: TeamCardProps) {
                 isOpen={isScheduleModalOpen}
                 onClose={() => setIsScheduleModalOpen(false)}
                 onSuccess={onUpdate}
+            />
+
+            <ViewEmailsModal
+                team={team}
+                isOpen={isViewEmailsModalOpen}
+                onClose={() => setIsViewEmailsModalOpen(false)}
             />
         </div>
     );
