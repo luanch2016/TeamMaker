@@ -53,7 +53,7 @@ export default function CreateTeamForm({ onSuccess }: CreateTeamFormProps) {
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-8">
             <h2 className="text-xl font-bold text-gray-900 mb-6">Create New Team</h2>
             {error && <p className="text-red-500 mb-4 text-sm">{error}</p>}
-            <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+            <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Team Name</label>
                     <input
