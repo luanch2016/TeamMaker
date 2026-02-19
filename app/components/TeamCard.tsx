@@ -7,6 +7,7 @@ import JoinTeamModal from './JoinTeamModal';
 import EditTeamModal from './EditTeamModal';
 import ScheduleMeetingModal from './ScheduleMeetingModal';
 import ViewEmailsModal from './ViewEmailsModal';
+import DeleteTeamModal from './DeleteTeamModal';
 
 interface TeamCardProps {
     team: Team;
@@ -18,6 +19,7 @@ export default function TeamCard({ team, onUpdate }: TeamCardProps) {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
     const [isViewEmailsModalOpen, setIsViewEmailsModalOpen] = useState(false);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [editingMemberEmail, setEditingMemberEmail] = useState<string | null>(null);
     const [editingTimezone, setEditingTimezone] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -224,12 +226,7 @@ export default function TeamCard({ team, onUpdate }: TeamCardProps) {
                     </button>
                 )}
                 <button
-                    onClick={async () => {
-                        if (confirm('Are you sure you want to delete this team?')) {
-                            await fetch(`/api/teams/${team.id}`, { method: 'DELETE' });
-                            onUpdate();
-                        }
-                    }}
+                    onClick={() => setIsDeleteModalOpen(true)}
                     className="w-full bg-red-50 text-red-700 font-medium py-2 px-4 rounded-lg hover:bg-red-100 transition-colors duration-200"
                 >
                     Delete Team
@@ -261,6 +258,13 @@ export default function TeamCard({ team, onUpdate }: TeamCardProps) {
                 team={team}
                 isOpen={isViewEmailsModalOpen}
                 onClose={() => setIsViewEmailsModalOpen(false)}
+            />
+
+            <DeleteTeamModal
+                team={team}
+                isOpen={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+                onSuccess={onUpdate}
             />
         </div>
     );
