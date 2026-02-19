@@ -8,6 +8,7 @@ import EditTeamModal from './EditTeamModal';
 import ScheduleMeetingModal from './ScheduleMeetingModal';
 import ViewEmailsModal from './ViewEmailsModal';
 import DeleteTeamModal from './DeleteTeamModal';
+import RemoveMemberModal from './RemoveMemberModal';
 
 interface TeamCardProps {
     team: Team;
@@ -20,6 +21,8 @@ export default function TeamCard({ team, onUpdate }: TeamCardProps) {
     const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
     const [isViewEmailsModalOpen, setIsViewEmailsModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [isRemoveMemberModalOpen, setIsRemoveMemberModalOpen] = useState(false);
+    const [memberToRemove, setMemberToRemove] = useState<string | null>(null);
     const [editingMemberEmail, setEditingMemberEmail] = useState<string | null>(null);
     const [editingTimezone, setEditingTimezone] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -49,14 +52,19 @@ export default function TeamCard({ team, onUpdate }: TeamCardProps) {
         }
     };
 
-    const handleRemoveMember = async (memberEmail: string) => {
-        if (!confirm(`Are you sure you want to remove this member?`)) return;
+    const handleRemoveMemberClick = (memberEmail: string) => {
+        setMemberToRemove(memberEmail);
+        setIsRemoveMemberModalOpen(true);
+    };
+
+    const handleConfirmRemoveMember = async () => {
+        if (!memberToRemove) return;
 
         try {
             const res = await fetch(`/api/teams/${team.id}/members`, {
                 method: 'DELETE',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: memberEmail }),
+                body: JSON.stringify({ email: memberToRemove }),
             });
 
             if (!res.ok) {
@@ -170,7 +178,7 @@ export default function TeamCard({ team, onUpdate }: TeamCardProps) {
                                 </div>
                                 {member.email !== team.leader.email && (
                                     <button
-                                        onClick={() => handleRemoveMember(member.email)}
+                                        onClick={() => handleRemoveMemberClick(member.email)}
                                         className="text-red-500 hover:text-red-700 text-xs px-2 py-1 rounded hover:bg-red-50 transition-colors"
                                         title="Remove member"
                                     >
@@ -265,6 +273,17 @@ export default function TeamCard({ team, onUpdate }: TeamCardProps) {
                 isOpen={isDeleteModalOpen}
                 onClose={() => setIsDeleteModalOpen(false)}
                 onSuccess={onUpdate}
+            />
+
+            <RemoveMemberModal
+                isOpen={isRemoveMemberModalOpen}
+                onClose={() => {
+                    setIsRemoveMemberModalOpen(false);
+                    setMemberToRemove(null);
+                }}
+                onConfirm={handleConfirmRemoveMember}
+                memberEmail={memberToRemove || ''}
+                leaderEmail={team.leader.email}
             />
         </div>
     );
