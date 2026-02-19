@@ -9,7 +9,7 @@ export async function POST(
     try {
         const { id } = await params;
         const body = await request.json();
-        const { name, email } = body;
+        const { name, email, timezone } = body;
 
         if (!name || !email) {
             return NextResponse.json(
@@ -28,7 +28,7 @@ export async function POST(
             return NextResponse.json({ error: 'Team is full' }, { status: 400 });
         }
 
-        team.members.push({ name, email });
+        team.members.push({ name, email, timezone });
 
         let status: 'OPEN' | 'FULL' = team.status;
         if (team.members.length >= 5) {

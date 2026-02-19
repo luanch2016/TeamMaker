@@ -20,7 +20,7 @@ export async function GET() {
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { name, subjectId, leaderName, leaderEmail } = body;
+        const { name, subjectId, leaderName, leaderEmail, leaderTimezone } = body;
 
         if (!name || !subjectId || !leaderName || !leaderEmail) {
             return NextResponse.json(
@@ -29,7 +29,7 @@ export async function POST(request: Request) {
             );
         }
 
-        const newTeam = await createTeam(name, subjectId, leaderName, leaderEmail);
+        const newTeam = await createTeam(name, subjectId, leaderName, leaderEmail, leaderTimezone);
 
         return NextResponse.json(newTeam, { status: 201 });
     } catch (error) {

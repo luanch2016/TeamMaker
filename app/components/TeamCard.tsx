@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { Team } from '@/lib/data';
 import JoinTeamModal from './JoinTeamModal';
 import EditTeamModal from './EditTeamModal';
+import ScheduleMeetingModal from './ScheduleMeetingModal';
 
 interface TeamCardProps {
     team: Team;
@@ -14,8 +15,35 @@ interface TeamCardProps {
 export default function TeamCard({ team, onUpdate }: TeamCardProps) {
     const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+    const [editingMemberEmail, setEditingMemberEmail] = useState<string | null>(null);
+    const [editingTimezone, setEditingTimezone] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
 
     const isFull = team.members.length >= 5 || team.status === 'FULL';
+
+    const handleUpdateTimezone = async (email: string) => {
+        setIsLoading(true);
+        try {
+            const res = await fetch(`/api/teams/${team.id}/members`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, timezone: editingTimezone }),
+            });
+
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.error || 'Failed to update timezone');
+            }
+            setEditingMemberEmail(null);
+            onUpdate();
+        } catch (error) {
+            console.error('Failed to update timezone:', error);
+            alert('Failed to update timezone');
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     const handleRemoveMember = async (memberEmail: string) => {
         if (!confirm(`Are you sure you want to remove this member?`)) return;
@@ -39,8 +67,8 @@ export default function TeamCard({ team, onUpdate }: TeamCardProps) {
     };
 
     return (
-        <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 border border-gray-100">
-            <div className="p-6">
+        <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 border border-gray-100 flex flex-col h-full">
+            <div className="p-6 flex-grow">
                 <div className="flex justify-between items-start mb-4">
                     <div>
                         <div className="flex items-center gap-2 mb-1">
@@ -59,7 +87,7 @@ export default function TeamCard({ team, onUpdate }: TeamCardProps) {
                         </div>
                         <div className="text-sm text-gray-500 space-y-1">
                             <p><span className="font-medium">Subject:</span> {team.subjectId}</p>
-                            <p><span className="font-medium">Leader:</span> {team.leader.name}</p>
+                            <p><span className="font-medium">Leader:</span> {team.leader.name} {team.leader.timezone && <span className="text-xs text-gray-400">({team.leader.timezone})</span>}</p>
                         </div>
                     </div>
                     <span
@@ -81,7 +109,52 @@ export default function TeamCard({ team, onUpdate }: TeamCardProps) {
                             <li key={idx} className="text-sm text-gray-600 flex items-center justify-between bg-gray-50 p-2 rounded-md">
                                 <div className="flex items-center">
                                     <span className="w-2 h-2 bg-indigo-400 rounded-full mr-2"></span>
-                                    {member.name}
+                                    <span>
+                                        {member.name}
+                                    </span>
+                                    <div className="ml-2 flex items-center">
+                                        {editingMemberEmail === member.email ? (
+                                            <div className="flex items-center gap-1">
+                                                <select
+                                                    className="text-xs border rounded p-1"
+                                                    value={editingTimezone}
+                                                    onChange={(e) => setEditingTimezone(e.target.value)}
+                                                >
+                                                    <option value="">Select Timezone</option>
+                                                    {Intl.supportedValuesOf('timeZone').map(tz => (
+                                                        <option key={tz} value={tz}>{tz}</option>
+                                                    ))}
+                                                </select>
+                                                <button
+                                                    onClick={() => handleUpdateTimezone(member.email)}
+                                                    className="text-green-600 hover:text-green-800"
+                                                    disabled={isLoading}
+                                                >
+                                                    ✓
+                                                </button>
+                                                <button
+                                                    onClick={() => setEditingMemberEmail(null)}
+                                                    className="text-red-600 hover:text-red-800"
+                                                >
+                                                    ✕
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <>
+                                                {member.timezone && <span className="text-xs text-gray-400">({member.timezone})</span>}
+                                                <button
+                                                    onClick={() => {
+                                                        setEditingMemberEmail(member.email);
+                                                        setEditingTimezone(member.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone);
+                                                    }}
+                                                    className="ml-2 text-gray-400 hover:text-indigo-600"
+                                                    title="Edit Timezone"
+                                                >
+                                                    ✎
+                                                </button>
+                                            </>
+                                        )}
+                                    </div>
                                 </div>
                                 {member.email !== team.leader.email && (
                                     <button
@@ -96,6 +169,41 @@ export default function TeamCard({ team, onUpdate }: TeamCardProps) {
                         ))}
                     </ul>
                 </div>
+
+                {team.meetings && team.meetings.length > 0 && (
+                    <div className="mb-6">
+                        <h4 className="text-sm font-medium text-gray-700 mb-2">
+                            Scheduled Meetings
+                        </h4>
+                        <ul className="space-y-2">
+                            {team.meetings.map((meeting) => (
+                                <li key={meeting.id} className="text-sm bg-blue-50 p-2 rounded-md border border-blue-100">
+                                    <div className="font-medium text-blue-900">{meeting.topic}</div>
+                                    <div className="text-xs text-blue-700">
+                                        {new Date(meeting.startTime).toLocaleString()}
+                                    </div>
+                                    <a
+                                        href={`/meeting/${team.id}/${meeting.id}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-xs text-indigo-600 hover:underline block mt-1"
+                                    >
+                                        Join Zoom Call
+                                    </a>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
+            </div>
+
+            <div className="p-6 pt-0 mt-auto">
+                <button
+                    onClick={() => setIsScheduleModalOpen(true)}
+                    className="w-full bg-blue-50 text-blue-700 font-medium py-2 px-4 rounded-lg hover:bg-blue-100 transition-colors duration-200 mb-2"
+                >
+                    Schedule Zoom Call
+                </button>
 
                 {!isFull && (
                     <button
@@ -129,6 +237,13 @@ export default function TeamCard({ team, onUpdate }: TeamCardProps) {
                 team={team}
                 isOpen={isEditModalOpen}
                 onClose={() => setIsEditModalOpen(false)}
+                onSuccess={onUpdate}
+            />
+
+            <ScheduleMeetingModal
+                teamId={team.id}
+                isOpen={isScheduleModalOpen}
+                onClose={() => setIsScheduleModalOpen(false)}
                 onSuccess={onUpdate}
             />
         </div>

@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface CreateTeamFormProps {
     onSuccess: () => void;
@@ -12,8 +12,14 @@ export default function CreateTeamForm({ onSuccess }: CreateTeamFormProps) {
     const [subjectId, setSubjectId] = useState('');
     const [leaderName, setLeaderName] = useState('');
     const [leaderEmail, setLeaderEmail] = useState('');
+    const [timezone, setTimezone] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [timezones, setTimezones] = useState<string[]>([]);
+
+    useEffect(() => {
+        setTimezones(Intl.supportedValuesOf('timeZone'));
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -24,7 +30,7 @@ export default function CreateTeamForm({ onSuccess }: CreateTeamFormProps) {
             const res = await fetch('/api/teams', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, subjectId, leaderName, leaderEmail }),
+                body: JSON.stringify({ name, subjectId, leaderName, leaderEmail, leaderTimezone: timezone }),
             });
 
             if (!res.ok) {
@@ -91,6 +97,20 @@ export default function CreateTeamForm({ onSuccess }: CreateTeamFormProps) {
                         className="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2.5"
                         placeholder="john@example.com"
                     />
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Timezone (Optional)</label>
+                    <select
+                        value={timezone}
+                        onChange={(e) => setTimezone(e.target.value)}
+                        className="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2.5"
+                    >
+                        <option value="">Select Timezone</option>
+
+                        {timezones.map((tz) => (
+                            <option key={tz} value={tz}>{tz}</option>
+                        ))}
+                    </select>
                 </div>
                 <div>
                     <button
